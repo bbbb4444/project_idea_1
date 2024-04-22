@@ -47,6 +47,7 @@ public class Simulation {
         int fullSize = processList.size();
         Queue<Process> processes = new LinkedList<>(processList);
         Queue<Process> readyQueue = new LinkedList<>();
+        List<Process> ioWait = new ArrayList<>();
         List<Process> finished = new ArrayList<>();
 
         int currentTime = 0;
@@ -63,15 +64,27 @@ public class Simulation {
             Process current = readyQueue.poll();
 
             while (remainingQuantum > 0 && current.remainingTime > 0) {
-                current.remainingTime -= 1;
-                remainingQuantum -= 1;
                 currentTime += 1;
-
                 // Calculate how long processes have been waiting in the ready queue
                 for (Process proc : readyQueue) {
+                    proc.turnaroundTime += 1;
                     proc.readyQueueTime += 1;
                 }
+
+                // Check for IO Wait request
+                if (current.turnaroundTime == current.ioRequestTime) {
+                    ioWait.add(current);
+                    processWaitList(ioWait, readyQueue);
+                    break;
+                }
+                processWaitList(ioWait, readyQueue);
+                current.turnaroundTime += 1;
+                current.remainingTime -= 1;
+                remainingQuantum -= 1;
+
             }
+
+            if (ioWait.contains(current)) continue;
 
             if (current.remainingTime > 0) {
                 readyQueue.offer(current);
@@ -81,6 +94,20 @@ public class Simulation {
 
         }
         printResults(finished);
+    }
+
+    private static void processWaitList(List<Process> waitList, Queue<Process> readyQueue) {
+        Iterator<Process> iterator = waitList.iterator();
+        while (iterator.hasNext()) {
+            Process proc = iterator.next();
+            proc.ioDuration -= 1;
+            proc.turnaroundTime += 1;
+
+            if (proc.ioDuration <= 0) {
+                iterator.remove();
+                readyQueue.offer(proc);
+            }
+        }
     }
 
     private static void priority(List<Process> processes) {
