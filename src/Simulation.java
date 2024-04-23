@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.util.*;
 
@@ -47,7 +48,7 @@ public class Simulation {
         int fullSize = processList.size();
         Queue<Process> processes = new LinkedList<>(processList);
         Queue<Process> readyQueue = new LinkedList<>();
-        List<Process> ioWait = new ArrayList<>();
+        //List<Process> ioWait = new ArrayList<>();
         List<Process> finished = new ArrayList<>();
 
         int currentTime = 0;
@@ -60,35 +61,39 @@ public class Simulation {
                 readyQueue.offer(proc);
             }
             int remainingQuantum = quantum;
-
             Process current = readyQueue.poll();
 
             while (remainingQuantum > 0 && current.remainingTime > 0) {
                 currentTime += 1;
-                // Calculate how long processes have been waiting in the ready queue
+
+                // Check for IO Wait request, put current process into wait list and continue with next process if so
+                //if (current.turnaroundTime == current.ioRequestTime) {
+                //    ioWait.add(current);
+                //    break;
+                //}
+
+                // Increase time for processes in ready queue
                 for (Process proc : readyQueue) {
                     proc.turnaroundTime += 1;
                     proc.readyQueueTime += 1;
                 }
 
-                // Check for IO Wait request
-                if (current.turnaroundTime == current.ioRequestTime) {
-                    ioWait.add(current);
-                    processWaitList(ioWait, readyQueue);
-                    break;
+                while (processes.peek() != null && processes.peek().arrivalTime <= currentTime) {
+                    Process proc = processes.poll();
+                    readyQueue.offer(proc);
                 }
-                processWaitList(ioWait, readyQueue);
+                //processWaitList(ioWait, readyQueue);
                 current.turnaroundTime += 1;
                 current.remainingTime -= 1;
                 remainingQuantum -= 1;
 
+                System.out.println(current);
             }
-
-            if (ioWait.contains(current)) continue;
 
             if (current.remainingTime > 0) {
                 readyQueue.offer(current);
             } else {
+                current.waitingTime = current.turnaroundTime - current.burstTime;
                 finished.add(current);
             }
 
