@@ -78,16 +78,16 @@ public class Simulation {
                     proc.readyQueueTime += 1;
                 }
 
+                // Put all processes that have arrived into the ready queue
                 while (processes.peek() != null && processes.peek().arrivalTime <= currentTime) {
                     Process proc = processes.poll();
                     readyQueue.offer(proc);
                 }
+
                 //processWaitList(ioWait, readyQueue);
                 current.turnaroundTime += 1;
                 current.remainingTime -= 1;
                 remainingQuantum -= 1;
-
-                System.out.println(current);
             }
 
             if (current.remainingTime > 0) {
@@ -123,8 +123,15 @@ public class Simulation {
 
     public static void printResults(List<Process> processes) {
         System.out.println("PID\tArrival Time\tBurst Time\tPriority\tWaiting Time\tTurnaround Time\t\tRQ Time");
+        int totalWaitingTime = 0;
+        int totalTurnaroundTime = 0;
         for (Process process : processes) {
             System.out.println(process);
+            totalWaitingTime += process.waitingTime;
+            totalTurnaroundTime += process.turnaroundTime;
         }
+
+        System.out.println("Average Waiting Time: " + totalWaitingTime/ (float) processes.size());
+        System.out.println("Average Turnaround Time: " + totalTurnaroundTime/ (float) processes.size());
     }
 }
