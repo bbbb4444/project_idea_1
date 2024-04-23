@@ -5,7 +5,7 @@ class Process implements Comparable<Process> {
     int priority;
     int ioRequestTime;
     int ioDuration;
-    int elapsedTime;
+    int runningTime;
     int remainingTime;
     int waitingTime;
     int turnaroundTime;
