@@ -61,7 +61,7 @@ public class Simulation {
 
             while (readyQueue.isEmpty()) {
                 currentTime += 1;
-                processWaitList(ioWait, readyQueue);
+                processWaitList(ioWait, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
@@ -78,7 +78,7 @@ public class Simulation {
                 }
 
                 currentTime += 1;
-                processWaitList(ioWait, readyQueue);
+                processWaitList(ioWait, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
 
@@ -86,6 +86,12 @@ public class Simulation {
                 current.turnaroundTime += 1;
                 current.remainingTime -= 1;
                 remainingQuantum -= 1;
+
+                // Check for IO Wait request again, put current process into wait list and continue with next process if so
+                if (current.runningTime == current.ioRequestTime && current.runningTime <= current.ioDuration) {
+                    ioWait.add(current);
+                    break;
+                }
             }
 
             if (ioWait.contains(current)) {
@@ -107,22 +113,24 @@ public class Simulation {
         while (processes.peek() != null && processes.peek().arrivalTime == currentTime) {
             Process proc = processes.poll();
             readyQueue.offer(proc);
-            System.out.println("e");
         }
     }
 
     // Helper function to increment time of wait list processes
-    private static void processWaitList(List<Process> waitList, Queue<Process> readyQueue) {
+    private static void processWaitList(List<Process> waitList, Queue<Process> readyQueue, List<Process> finished) {
         Iterator<Process> iterator = waitList.iterator();
         while (iterator.hasNext()) {
             Process proc = iterator.next();
             proc.ioDuration -= 1;
             proc.turnaroundTime += 1;
-            System.out.println("dur:" +proc.ioDuration);
 
             if (proc.ioDuration <= 0) {
                 iterator.remove();
-                readyQueue.offer(proc);
+                if (proc.runningTime < proc.burstTime) {
+                    readyQueue.offer(proc);
+                } else {
+                    finished.add(proc);
+                }
             }
         }
     }
@@ -143,6 +151,7 @@ public class Simulation {
 
 
     private static void FCFS(List<Process> processes) {
+
     }
 
 
