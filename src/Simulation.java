@@ -72,7 +72,7 @@ public class Simulation {
             // Run the current process
             while (remainingQuantum > 0 && current.remainingTime > 0) {
                 // Check for IO Wait request, put current process into wait list and continue with next process if so
-                if (current.runningTime == current.ioRequestTime && current.runningTime < current.ioDuration) {
+                if (current.runningTime == current.ioRequestTime && current.ioDuration > 0) {
                     IOQueue.add(current);
                     break;
                 }
@@ -88,7 +88,7 @@ public class Simulation {
                 remainingQuantum -= 1;
 
                 // Check for IO Wait request again, put current process into io queue and continue with next process if so
-                if (current.runningTime == current.ioRequestTime && current.runningTime <= current.ioDuration) {
+                if (current.runningTime == current.ioRequestTime && current.ioDuration > 0) {
                     IOQueue.add(current);
                     break;
                 }
