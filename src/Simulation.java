@@ -48,7 +48,7 @@ public class Simulation {
         int fullSize = processList.size();
         Queue<Process> processes = new LinkedList<>(processList);
         Queue<Process> readyQueue = new LinkedList<>();
-        List<Process> ioWait = new ArrayList<>();
+        Queue<Process> IOQueue = new LinkedList<>();
         List<Process> finished = new ArrayList<>();
 
         int currentTime = 0;
@@ -61,7 +61,7 @@ public class Simulation {
 
             while (readyQueue.isEmpty()) {
                 currentTime += 1;
-                processWaitList(ioWait, readyQueue, finished);
+                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
@@ -73,12 +73,12 @@ public class Simulation {
             while (remainingQuantum > 0 && current.remainingTime > 0) {
                 // Check for IO Wait request, put current process into wait list and continue with next process if so
                 if (current.runningTime == current.ioRequestTime && current.runningTime < current.ioDuration) {
-                    ioWait.add(current);
+                    IOQueue.add(current);
                     break;
                 }
 
                 currentTime += 1;
-                processWaitList(ioWait, readyQueue, finished);
+                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
 
@@ -87,14 +87,14 @@ public class Simulation {
                 current.remainingTime -= 1;
                 remainingQuantum -= 1;
 
-                // Check for IO Wait request again, put current process into wait list and continue with next process if so
+                // Check for IO Wait request again, put current process into io queue and continue with next process if so
                 if (current.runningTime == current.ioRequestTime && current.runningTime <= current.ioDuration) {
-                    ioWait.add(current);
+                    IOQueue.add(current);
                     break;
                 }
             }
 
-            if (ioWait.contains(current)) {
+            if (IOQueue.contains(current)) {
                 continue;
             }
             // Add finished processes to the finished list. Add unfinished processes back to the ready queue
@@ -116,21 +116,20 @@ public class Simulation {
         }
     }
 
-    // Helper function to increment time of wait list processes
-    private static void processWaitList(List<Process> waitList, Queue<Process> readyQueue, List<Process> finished) {
-        Iterator<Process> iterator = waitList.iterator();
-        while (iterator.hasNext()) {
-            Process proc = iterator.next();
-            proc.ioDuration -= 1;
-            proc.turnaroundTime += 1;
+    // Helper function to increment time of io queue process
+    private static void processIOQueue(Queue<Process> IOQueue, Queue<Process> readyQueue, List<Process> finished) {
+        Process proc = IOQueue.peek();
+        if (proc == null) return;
 
-            if (proc.ioDuration <= 0) {
-                iterator.remove();
-                if (proc.runningTime < proc.burstTime) {
-                    readyQueue.offer(proc);
-                } else {
-                    finished.add(proc);
-                }
+        proc.ioDuration -= 1;
+        proc.turnaroundTime += 1;
+
+        if (proc.ioDuration <= 0) {
+            IOQueue.poll();
+            if (proc.runningTime < proc.burstTime) {
+                readyQueue.offer(proc);
+            } else {
+                finished.add(proc);
             }
         }
     }
