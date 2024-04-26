@@ -56,7 +56,7 @@ public class Simulation {
         // Initialize ready queue, for processes arriving at time = 0, if possible
         checkArrivedProcesses(currentTime, processes, readyQueue);
 
-        // Process ready queue
+        // Process the processes
         while (finished.size() != fullSize) {
 
             while (readyQueue.isEmpty()) {
@@ -144,13 +144,58 @@ public class Simulation {
 
 
 
-    private static void priority(List<Process> processes) {
+    private static void priority(List<Process> processList) {
+        int fullSize = processList.size();
+        Queue<Process> processes = new LinkedList<>(processList);
+        Queue<Process> readyQueue = new LinkedList<>();
+        Queue<Process> IOQueue = new LinkedList<>();
+        List<Process> finished = new ArrayList<>();
+
+        int currentTime = 0;
+
+        // Initialize ready queue, for processes arriving at time = 0, if possible
+        checkArrivedProcesses(currentTime, processes, readyQueue);
+
+        // Process the processes
+        while (finished.size() != fullSize) {
+
+            while (readyQueue.isEmpty()) {
+                currentTime += 1;
+                processIOQueue(IOQueue, readyQueue, finished);
+                processReadyQueue(readyQueue);
+                checkArrivedProcesses(currentTime, processes, readyQueue);
+            }
+
+
+        }
     }
 
 
 
-    private static void FCFS(List<Process> processes) {
+    private static void FCFS(List<Process> processList) {
+        int fullSize = processList.size();
+        Queue<Process> processes = new LinkedList<>(processList);
+        Queue<Process> readyQueue = new LinkedList<>();
+        Queue<Process> IOQueue = new LinkedList<>();
+        List<Process> finished = new ArrayList<>();
 
+        int currentTime = 0;
+
+        // Initialize ready queue, for processes arriving at time = 0, if possible
+        checkArrivedProcesses(currentTime, processes, readyQueue);
+
+        // Process the processes
+        while (finished.size() != fullSize) {
+
+            while (readyQueue.isEmpty()) {
+                currentTime += 1;
+                processIOQueue(IOQueue, readyQueue, finished);
+                processReadyQueue(readyQueue);
+                checkArrivedProcesses(currentTime, processes, readyQueue);
+            }
+
+
+        }
     }
 
 
