@@ -1,4 +1,4 @@
-
+// PID, ARRIVAL TIME, BURST TIME, PRIORITY, IO REQUEST TIME, IO DURATION
 import java.io.*;
 import java.util.*;
 
@@ -13,13 +13,22 @@ public class Simulation {
         System.out.println("\nRound-Robin Scheduling:");
         roundRobin(processes, 2);
 
-        System.out.println("\nFirst-Come First-Served (FCFS) Scheduling:");
-        FCFS(processes);
+        resetProcesses(processes);
+
+        //System.out.println("\nFirst-Come First-Served (FCFS) Scheduling:");
+        //FCFS(processes);
+
+        resetProcesses(processes);
 
         System.out.println("\nPriority Scheduling:");
         priority(processes);
     }
 
+    private static void resetProcesses(List<Process> processes) {
+        for (Process proc : processes) {
+            proc.reset();
+        }
+    }
 
     private static List<Process> readInputFile(String fileName) {
         List<Process> processes = new ArrayList<>();
@@ -72,7 +81,7 @@ public class Simulation {
             // Run the current process
             while (remainingQuantum > 0 && current.remainingTime > 0) {
                 // Check for IO Wait request, put current process into wait list and continue with next process if so
-                if (current.runningTime == current.ioRequestTime && current.ioDuration > 0) {
+                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
                     IOQueue.add(current);
                     break;
                 }
@@ -88,7 +97,7 @@ public class Simulation {
                 remainingQuantum -= 1;
 
                 // Check for IO Wait request again, put current process into io queue and continue with next process if so
-                if (current.runningTime == current.ioRequestTime && current.ioDuration > 0) {
+                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
                     IOQueue.add(current);
                     break;
                 }
@@ -121,10 +130,10 @@ public class Simulation {
         Process proc = IOQueue.peek();
         if (proc == null) return;
 
-        proc.ioDuration -= 1;
+        proc.ioDurationLeft -= 1;
         proc.turnaroundTime += 1;
 
-        if (proc.ioDuration <= 0) {
+        if (proc.ioDurationLeft <= 0) {
             IOQueue.poll();
             if (proc.runningTime < proc.burstTime) {
                 readyQueue.offer(proc);
@@ -147,7 +156,7 @@ public class Simulation {
     private static void priority(List<Process> processList) {
         int fullSize = processList.size();
         Queue<Process> processes = new LinkedList<>(processList);
-        Queue<Process> readyQueue = new LinkedList<>();
+        Queue<Process> readyQueue = new PriorityQueue<>();
         Queue<Process> IOQueue = new LinkedList<>();
         List<Process> finished = new ArrayList<>();
 
@@ -161,13 +170,48 @@ public class Simulation {
 
             while (readyQueue.isEmpty()) {
                 currentTime += 1;
-                processIOQueue(IOQueue, readyQueue, finished);
+                //processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
 
 
+            Process current = readyQueue.peek();
+            while (current.remainingTime > 0) {
+                // Check for IO Wait request, put current process into wait list and continue with next process if so
+//                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+//                    IOQueue.add(current);
+//                    break;
+//                }
+
+                currentTime += 1;
+                //processIOQueue(IOQueue, readyQueue, finished);
+                processReadyQueue(readyQueue);
+                checkArrivedProcesses(currentTime, processes, readyQueue);
+
+                current.runningTime += 1;
+                current.turnaroundTime += 1;
+                current.remainingTime -= 1;
+
+                // Check for IO Wait request again, put current process into io queue and continue with next process if so
+//                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+//                    IOQueue.add(current);
+//                    break;
+//                }
+            }
+
+            if (IOQueue.contains(current)) {
+                continue;
+            }
+            // Add finished processes to the finished list. Add unfinished processes back to the ready queue
+            if (current.remainingTime > 0) {
+                readyQueue.offer(current);
+            } else {
+                current.waitingTime = current.turnaroundTime - current.burstTime;
+                finished.add(current);
+            }
         }
+        printResults(finished);
     }
 
 

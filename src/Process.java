@@ -5,6 +5,8 @@ class Process implements Comparable<Process> {
     int priority;
     int ioRequestTime;
     int ioDuration;
+
+    int ioDurationLeft;
     int runningTime;
     int remainingTime;
     int waitingTime;
@@ -19,6 +21,16 @@ class Process implements Comparable<Process> {
         this.ioRequestTime = ioRequestTime;
         this.ioDuration = ioDuration;
         this.remainingTime = burstTime;
+        this.ioDurationLeft = ioDuration;
+    }
+
+    public void reset() {
+        this.remainingTime = burstTime;
+        this.ioDurationLeft = ioDuration;
+        this.runningTime = 0;
+        this.waitingTime = 0;
+        this.turnaroundTime = 0;
+        this.readyQueueTime = 0;
     }
 
     @Override
