@@ -170,22 +170,22 @@ public class Simulation {
 
             while (readyQueue.isEmpty()) {
                 currentTime += 1;
-                //processIOQueue(IOQueue, readyQueue, finished);
+                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
 
 
-            Process current = readyQueue.peek();
+            Process current = readyQueue.poll();
             while (current.remainingTime > 0) {
                 // Check for IO Wait request, put current process into wait list and continue with next process if so
-//                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
-//                    IOQueue.add(current);
-//                    break;
-//                }
+                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+                    IOQueue.add(current);
+                    break;
+                }
 
                 currentTime += 1;
-                //processIOQueue(IOQueue, readyQueue, finished);
+                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
                 checkArrivedProcesses(currentTime, processes, readyQueue);
 
@@ -194,10 +194,10 @@ public class Simulation {
                 current.remainingTime -= 1;
 
                 // Check for IO Wait request again, put current process into io queue and continue with next process if so
-//                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
-//                    IOQueue.add(current);
-//                    break;
-//                }
+                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+                    IOQueue.add(current);
+                    break;
+                }
             }
 
             if (IOQueue.contains(current)) {
