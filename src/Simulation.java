@@ -15,8 +15,8 @@ public class Simulation {
 
         resetProcesses(processes);
 
-        //System.out.println("\nFirst-Come First-Served (FCFS) Scheduling:");
-        //FCFS(processes);
+        System.out.println("\nFirst-Come First-Served (FCFS) Scheduling:");
+        FCFS(processes);
 
         resetProcesses(processes);
 
@@ -117,40 +117,6 @@ public class Simulation {
         printResults(finished);
     }
 
-    // Helper function to put all processes that have arrived into the ready queue
-    private static void checkArrivedProcesses(int currentTime, Queue<Process> processes, Queue<Process> readyQueue) {
-        while (processes.peek() != null && processes.peek().arrivalTime == currentTime) {
-            Process proc = processes.poll();
-            readyQueue.offer(proc);
-        }
-    }
-
-    // Helper function to increment time of io queue process
-    private static void processIOQueue(Queue<Process> IOQueue, Queue<Process> readyQueue, List<Process> finished) {
-        Process proc = IOQueue.peek();
-        if (proc == null) return;
-
-        proc.ioDurationLeft -= 1;
-        proc.turnaroundTime += 1;
-
-        if (proc.ioDurationLeft <= 0) {
-            IOQueue.poll();
-            if (proc.runningTime < proc.burstTime) {
-                readyQueue.offer(proc);
-            } else {
-                finished.add(proc);
-            }
-        }
-    }
-
-    // Helper function to increment time of readyqueue processes
-    private static void processReadyQueue(Queue<Process> readyQueue) {
-        for (Process proc : readyQueue) {
-            proc.turnaroundTime += 1;
-            proc.readyQueueTime += 1;
-        }
-    }
-
 
 
     private static void priority(List<Process> processList) {
@@ -238,11 +204,81 @@ public class Simulation {
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
 
+            Process current = readyQueue.poll();
 
+            // Run the current process
+            while (current.remainingTime > 0) {
+                // Check for IO Wait request, put current process into wait list and continue with next process if so
+                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+                    IOQueue.add(current);
+                    break;
+                }
+
+                currentTime += 1;
+                processIOQueue(IOQueue, readyQueue, finished);
+                processReadyQueue(readyQueue);
+                checkArrivedProcesses(currentTime, processes, readyQueue);
+
+                current.runningTime += 1;
+                current.turnaroundTime += 1;
+                current.remainingTime -= 1;
+
+                // Check for IO Wait request again, put current process into io queue and continue with next process if so
+                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+                    IOQueue.add(current);
+                    break;
+                }
+            }
+
+            if (IOQueue.contains(current)) {
+                continue;
+            }
+            // Add finished processes to the finished list. Add unfinished processes back to the ready queue
+            if (current.remainingTime > 0) {
+                readyQueue.offer(current);
+            } else {
+                current.waitingTime = current.turnaroundTime - current.burstTime;
+                finished.add(current);
+            }
         }
+        printResults(finished);
+
     }
 
 
+    // Helper function to put all processes that have arrived into the ready queue
+    private static void checkArrivedProcesses(int currentTime, Queue<Process> processes, Queue<Process> readyQueue) {
+        while (processes.peek() != null && processes.peek().arrivalTime == currentTime) {
+            Process proc = processes.poll();
+            readyQueue.offer(proc);
+        }
+    }
+
+    // Helper function to increment time of io queue process
+    private static void processIOQueue(Queue<Process> IOQueue, Queue<Process> readyQueue, List<Process> finished) {
+        Process proc = IOQueue.peek();
+        if (proc == null) return;
+
+        proc.ioDurationLeft -= 1;
+        proc.turnaroundTime += 1;
+
+        if (proc.ioDurationLeft <= 0) {
+            IOQueue.poll();
+            if (proc.runningTime < proc.burstTime) {
+                readyQueue.offer(proc);
+            } else {
+                finished.add(proc);
+            }
+        }
+    }
+
+    // Helper function to increment time of readyqueue processes
+    private static void processReadyQueue(Queue<Process> readyQueue) {
+        for (Process proc : readyQueue) {
+            proc.turnaroundTime += 1;
+            proc.readyQueueTime += 1;
+        }
+    }
 
     public static void printResults(List<Process> processes) {
         System.out.println("PID\tArrival Time\tBurst Time\tPriority\tWaiting Time\tTurnaround Time\t\tRQ Time");
@@ -256,5 +292,6 @@ public class Simulation {
 
         System.out.println("Average Waiting Time: " + totalWaitingTime/ (float) processes.size());
         System.out.println("Average Turnaround Time: " + totalTurnaroundTime/ (float) processes.size());
+
     }
 }
