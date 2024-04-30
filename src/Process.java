@@ -1,4 +1,4 @@
-class Process implements Comparable<Process> {
+class Process {
     int pid;
     int arrivalTime;
     int burstTime;
@@ -7,6 +7,7 @@ class Process implements Comparable<Process> {
     int ioDuration;
 
     int ioDurationLeft;
+    int ioWaitingTime;
     int runningTime;
     int readyQueueTime;
 
@@ -27,6 +28,7 @@ class Process implements Comparable<Process> {
     // Reset between algorithms
     public void reset() {
         this.ioDurationLeft = ioDuration;
+        this.ioWaitingTime = 0;
         this.runningTime = 0;
         this.readyQueueTime = 0;
 
@@ -37,11 +39,5 @@ class Process implements Comparable<Process> {
     @Override
     public String toString() {
         return pid + "\t" + arrivalTime + "\t\t\t\t" + burstTime + "\t\t\t" + priority + "\t\t\t" + waitingTime + "\t\t\t\t" + turnaroundTime + "\t\t\t\t\t" + readyQueueTime;
-    }
-
-    // For easy priority queue usage
-    @Override
-    public int compareTo(Process other) {
-        return Integer.compare(this.priority, other.priority);
     }
 }
