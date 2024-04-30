@@ -7,12 +7,7 @@ public class Simulation {
 
     public static void main(String[] args) {
 
-        List<Process> processes = readInputFile("src/input2.txt");
-
-        System.out.println("\nRound-Robin Scheduling:");
-        roundRobin(processes, 2);
-
-        resetProcesses(processes);
+        List<Process> processes = readInputFile("src/input.txt");
 
         System.out.println("\nFirst-Come First-Served (FCFS) Scheduling:");
         FCFS(processes);
@@ -21,6 +16,11 @@ public class Simulation {
 
         System.out.println("\nPriority Scheduling:");
         priority(processes);
+
+        resetProcesses(processes);
+
+        System.out.println("\nRound-Robin Scheduling:");
+        roundRobin(processes, 2);
     }
 
     private static void resetProcesses(List<Process> processes) {
@@ -75,8 +75,7 @@ public class Simulation {
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
 
-            Process current;
-            current = readyQueue.poll();
+            Process current = readyQueue.poll();
 
             // Check for IO Wait request, put current process into wait list and continue with next process if so
             if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
@@ -124,44 +123,35 @@ public class Simulation {
         while (finished.size() != fullSize) {
 
             while (readyQueue.isEmpty()) {
-                currentTime += 1;
-                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
+                processIOQueue(IOQueue, readyQueue, finished);
+                currentTime += 1;
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
-
 
             Process current = readyQueue.poll();
-            while (current.runningTime < current.burstTime) {
-                // Check for IO Wait request, put current process into wait list and continue with next process if so
-                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
-                    IOQueue.add(current);
-                    break;
-                }
 
-                currentTime += 1;
-                processIOQueue(IOQueue, readyQueue, finished);
-                processReadyQueue(readyQueue);
-                checkArrivedProcesses(currentTime, processes, readyQueue);
-
-                current.runningTime += 1;
-
-                // Check for IO Wait request again, put current process into io queue and continue with next process if so
-                if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
-                    IOQueue.add(current);
-                    break;
-                }
-            }
-
-            if (IOQueue.contains(current)) {
+            // Check for IO Wait request, put current process into wait list and continue with next process if so
+            if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
+                IOQueue.add(current);
                 continue;
             }
+
+            processReadyQueue(readyQueue);
+            processIOQueue(IOQueue, readyQueue, finished);
+            current.runningTime += 1;
+
+            currentTime += 1;
+            checkArrivedProcesses(currentTime, processes, readyQueue);
+
             // Add finished processes to the finished list. Add unfinished processes back to the ready queue
             if (current.runningTime < current.burstTime) {
                 readyQueue.offer(current);
             } else {
                 finished.add(current);
             }
+
+
         }
         CalcTTandWT(finished);
         printResults(finished);
