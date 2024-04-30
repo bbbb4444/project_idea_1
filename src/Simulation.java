@@ -175,9 +175,9 @@ public class Simulation {
         while (finished.size() != fullSize) {
 
             while (readyQueue.isEmpty()) {
-                currentTime += 1;
-                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
+                processIOQueue(IOQueue, readyQueue, finished);
+                currentTime += 1;
                 checkArrivedProcesses(currentTime, processes, readyQueue);
             }
 
@@ -192,13 +192,14 @@ public class Simulation {
                     break;
                 }
 
-                currentTime += 1;
-                processIOQueue(IOQueue, readyQueue, finished);
                 processReadyQueue(readyQueue);
+                processIOQueue(IOQueue, readyQueue, finished);
+                current.runningTime += 1;
+
+                currentTime += 1;
+                remainingQuantum -= 1;
                 checkArrivedProcesses(currentTime, processes, readyQueue);
 
-                current.runningTime += 1;
-                remainingQuantum -= 1;
 
                 // Check for IO Wait request again, put current process into io queue and continue with next process if so
                 if (current.runningTime == current.ioRequestTime && current.ioDurationLeft > 0) {
@@ -210,6 +211,7 @@ public class Simulation {
             if (IOQueue.contains(current)) {
                 continue;
             }
+
             // Add finished processes to the finished list. Add unfinished processes back to the ready queue
             if (current.runningTime < current.burstTime) {
                 readyQueue.offer(current);
